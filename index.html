@@ -308,8 +308,8 @@ const $=s=>document.querySelector(s);
 /* 터치 기기 여부: 폰·패드면 키보드 단축키 안내를 숨긴다 */
 const IS_TOUCH = (matchMedia&&matchMedia('(pointer:coarse)').matches) || ('ontouchstart' in window) || navigator.maxTouchPoints>0;
 $('#hintbar').textContent = IS_TOUCH
-  ? '오른쪽 조이스틱으로 이동 · 빛나는 가구 근처에서 왼쪽 조사 버튼을 탭'
-  : '조이스틱으로 이동 · 빛나는 가구를 조사 (PC: WASD / E)';
+  ? '오른쪽 조이스틱으로 이동 · 가구에 다가가 톡톡 두드리기(화면 터치)'
+  : '이동 WASD/조이스틱 · 가구에 다가가 클릭 또는 E로 두드리기';
 const player={name:'탐험가',shirt:SHIRTS[0],session:''};
 const progress={room:0};
 const S={done:{},digits:['?','?','?','?'],items:[],near:null,paused:true};
@@ -481,6 +481,29 @@ function decorate(t,idx){
 /* 방 짓기 */
 const roomGroup=new THREE.Group(); scene.add(roomGroup);
 let dustField=null;
+/* 방마다 내부 구조물(기둥·모서리 벽) → 직사각형을 깨고 탐험 동선을 만든다. 가구·출입구와 겹치지 않게 배치 */
+let curBlocks=[];
+function roomBlocks(i){
+  return [
+    // 제1방: 뒤쪽 모서리를 막아 ㄱ자 형태 + 기둥 둘
+    [{x:-13.5,z:13.5,w:5,d:5},{x:-4,z:-3,w:2,d:2},{x:4,z:2,w:2,d:2}],
+    // 제2방: 양쪽 뒤 모서리를 막아 T자 형태 + 중앙 기둥
+    [{x:-13.5,z:13.5,w:5,d:5},{x:13.5,z:13.5,w:4.6,d:4.6},{x:0,z:-6,w:2,d:2}],
+    // 제3방: 한쪽 모서리 + 기둥 둘로 슬라럼 동선
+    [{x:13.5,z:13.5,w:4.6,d:4.6},{x:-4,z:-2,w:2,d:2},{x:5,z:3,w:2,d:2}],
+    // 제4방: 앞쪽 모서리 + 기둥 둘
+    [{x:-13.5,z:-13.5,w:4.6,d:4.6},{x:-4,z:4,w:2,d:2},{x:5,z:5,w:2,d:2}]
+  ][i]||[];
+}
+function resolveBlocks(p){ const R=0.9;
+  for(const b of curBlocks){ const hx=b.w/2+R, hz=b.d/2+R, dx=p.x-b.x, dz=p.z-b.z;
+    if(Math.abs(dx)<hx && Math.abs(dz)<hz){
+      if(hx-Math.abs(dx) < hz-Math.abs(dz)) p.x = b.x + (dx<0?-hx:hx);
+      else p.z = b.z + (dz<0?-hz:hz);
+    }
+  }
+}
+window.__resolveBlocks=resolveBlocks; window.__curBlocks=()=>curBlocks;
 function clearGroup(gr){gr.traverse(o=>{if(o.isMesh){o.geometry.dispose();if(o.material.map)o.material.map.dispose();o.material.dispose();}});
   while(gr.children.length)gr.remove(gr.children[0]);}
 function buildRoom(i){
@@ -495,10 +518,19 @@ function buildRoom(i){
   const plq=box(6,1.6,0.2,0x00000055);plq.position.set(0,7,-ROOM+0.9);roomGroup.add(plq);
   decorate(t,i);
 
+  // 내부 구조물(기둥·모서리 벽) — 방 모양을 다양하게
+  curBlocks=roomBlocks(i);
+  curBlocks.forEach(b=>{
+    const isPillar=b.w<=2.6, col=isPillar?0x4a3417:t.wall;
+    const bx=box(b.w,WH,b.d,col);bx.position.set(b.x,WH/2,b.z);roomGroup.add(bx);
+    if(isPillar){const cap=box(b.w+0.4,0.5,b.d+0.4,0x3c2917);cap.position.set(b.x,WH-0.3,b.z);roomGroup.add(cap);
+      const base=box(b.w+0.4,0.5,b.d+0.4,0x3c2917);base.position.set(b.x,0.25,b.z);roomGroup.add(base);}
+  });
+
   R.stations.forEach(st=>{
     const g=furniture(st.build,st.color);
     let z=st.z; if(st.build==='scroll')z=-ROOM+0.9; if(st.build==='door')z=ROOM-0.4;
-    g.position.set(st.x,0,z); roomGroup.add(g); st.group=g; st._z=z;
+    g.position.set(st.x,0,z); g.userData.stationId=st.id; roomGroup.add(g); st.group=g; st._z=z;
     if(st.build==='door'){                                  // 문 위 '다음 방으로' 표지
       const lbl=(i>=ROOMS.length-1)?'최종 탈출':'다음 방으로';
       const sign=textSprite(lbl,'#ffe6a8'); sign.scale.set(5.4,2,1); sign.position.set(st.x,7.4,z-0.2);
@@ -518,7 +550,7 @@ function buildRoom(i){
 }
 
 /* 주인공 */
-const hero=buildAvatar(player.shirt,player.name); scene.add(hero);
+const hero=buildAvatar(player.shirt,player.name); hero.scale.setScalar(0.7); scene.add(hero);
 buildRoom(0);
 
 /* 입력 */
@@ -533,9 +565,33 @@ const input={x:0,y:0};
   base.addEventListener('pointermove',e=>{if(e.pointerId===id)set(e.clientX-cx,e.clientY-cy);});
   base.addEventListener('pointerup',reset);base.addEventListener('pointercancel',reset);})();
 const keys={};
-addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=1;if((e.key==='e'||e.key==='E')&&S.near)openStation(S.near);});
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=1;if((e.key==='e'||e.key==='E'))tryInteract(S.near);});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=0;});
-$('#act').onclick=()=>{if(S.near)openStation(S.near);};
+$('#act').onclick=()=>{tryInteract(S.near);};
+
+/* ── 가구 터치 상호작용 + 두드리는 모션 ── */
+let acting=false, actClock=0, pendingSt=null;
+const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
+function flashHint(msg){const h=$('#hintbar');if(!h)return;if(flashHint._o===undefined)flashHint._o=h.textContent;
+  h.textContent=msg;h.style.color='#ffd98a';clearTimeout(flashHint._t);
+  flashHint._t=setTimeout(()=>{h.textContent=flashHint._o;h.style.color='';},1600);}
+function startAction(st){ if(acting||S.paused||!st||S.done[st.id])return;
+  acting=true; actClock=0; pendingSt=st;
+  const dx=st.x-hero.position.x, dz=(st._z!==undefined?st._z:st.z)-hero.position.z;
+  hero.rotation.y=Math.atan2(dx,dz); input.x=input.y=0; }
+function tryInteract(st){ if(!st||S.done[st.id]||S.paused||acting)return;
+  const dx=st.x-hero.position.x, dz=(st._z!==undefined?st._z:st.z)-hero.position.z;
+  if(Math.hypot(dx,dz)>6.5){ flashHint('가구 가까이 가서 톡톡 두드려 보자'); return; }
+  startAction(st); }
+renderer.domElement.addEventListener('pointerdown',e=>{
+  if(S.paused||acting)return;
+  ndc.x=(e.clientX/innerWidth)*2-1; ndc.y=-(e.clientY/innerHeight)*2+1;
+  ray.setFromCamera(ndc,camera);
+  const hits=ray.intersectObjects(roomGroup.children,true);
+  for(const h of hits){ let o=h.object; while(o && o.userData.stationId===undefined)o=o.parent;
+    if(o && o.userData.stationId!==undefined){ tryInteract(stById(o.userData.stationId)); break; } }
+});
+window.__startAction=st=>startAction(st);
 
 /* 방 전환 */
 window.__advance=()=>{
@@ -570,7 +626,7 @@ function netUpdate(dt){
     if(d.r!==progress.room){ if(net.avatars[pid]){scene.remove(net.avatars[pid]);delete net.avatars[pid];} continue; }
     seen[pid]=1;
     let a=net.avatars[pid];
-    if(!a){ a=buildAvatar(d.c||0x888888,d.n||'?'); scene.add(a); a.userData.tp=new THREE.Vector3(d.x,0,d.z); net.avatars[pid]=a; }
+    if(!a){ a=buildAvatar(d.c||0x888888,d.n||'?'); a.scale.setScalar(0.7); scene.add(a); a.userData.tp=new THREE.Vector3(d.x,0,d.z); net.avatars[pid]=a; }
     a.userData.tp.set(d.x,0,d.z);
     a.position.lerp(a.userData.tp,Math.min(1,dt*6));
   }
@@ -589,7 +645,7 @@ function animate(){
   let ix=Math.max(-1,Math.min(1,input.x+((keys['d']||keys['arrowright'])?1:0)-((keys['a']||keys['arrowleft'])?1:0)));
   let iy=Math.max(-1,Math.min(1,input.y+((keys['s']||keys['arrowdown'])?1:0)-((keys['w']||keys['arrowup'])?1:0)));
   let moving=false;
-  if(!S.paused && (Math.abs(ix)>0.12||Math.abs(iy)>0.12)){
+  if(!S.paused && !acting && (Math.abs(ix)>0.12||Math.abs(iy)>0.12)){
     // 카메라 기준 이동: '위'는 항상 화면 안쪽(카메라가 보는 방향)=앞으로 고정
     const f=new THREE.Vector3(Math.sin(camYaw),0,Math.cos(camYaw));   // 화면 전방
     const r=new THREE.Vector3(-Math.cos(camYaw),0,Math.sin(camYaw));  // 화면 오른쪽
@@ -603,15 +659,24 @@ function animate(){
   const lim=ROOM-1.4;
   hero.position.x=Math.max(-lim,Math.min(lim,hero.position.x));
   hero.position.z=Math.max(-lim,Math.min(lim,hero.position.z));
+  resolveBlocks(hero.position);   // 내부 구조물 충돌
   // 걷기
   if(moving)phase+=dt*11;else phase*=0.8;
   const sw=Math.sin(phase)*0.5*(moving?1:0);
   const u=hero.userData; u.legL.rotation.x=sw;u.legR.rotation.x=-sw;u.armL.rotation.x=-sw;u.armR.rotation.x=sw;
+  // 가구 두드리는 모션(폴짝 + 팔 톡톡) → 끝나면 문제 열기
+  if(acting){ actClock+=dt; const T=0.62,k=Math.min(actClock/T,1);
+    hero.position.y=Math.sin(k*Math.PI)*0.9;
+    u.armR.rotation.x=-Math.abs(Math.sin(k*Math.PI*3))*1.3;
+    u.armL.rotation.x=-Math.abs(Math.sin(k*Math.PI*3))*0.5;
+    if(actClock>=T){ acting=false; hero.position.y=0; u.armR.rotation.x=0; u.armL.rotation.x=0;
+      const st=pendingSt; pendingSt=null; openStation(st); }
+  } else if(hero.position.y!==0){ hero.position.y=0; }
   // 카메라: 캐릭터 어깨 뒤에서 바라보는 방향으로 (부드럽게 정렬 → 멀미 최소)
   { const tgt=hero.rotation.y;
     camYaw += Math.atan2(Math.sin(tgt-camYaw),Math.cos(tgt-camYaw))*Math.min(1,dt*3.5);
     const fx=Math.sin(camYaw), fz=Math.cos(camYaw);
-    const dist=6.5, camH=4.3, look=10, lookH=3.0;
+    const dist=5.6, camH=3.7, look=9, lookH=2.4;
     camTmp.set(hero.position.x-fx*dist, camH, hero.position.z-fz*dist);
     camera.position.lerp(camTmp,Math.min(1,dt*6));
     camera.lookAt(hero.position.x+fx*look, lookH, hero.position.z+fz*look); }
@@ -660,7 +725,9 @@ function openPuzzle(st){
   b+=`<div class="q">${st.q}</div>`;
   if(st.type==='choice'){
     b+=`<div class="how">아래 보기에서 알맞은 답 하나를 누르세요. 틀려도 다시 시도할 수 있어요.</div>`;
-    b+=`<div class="opts">${st.opts.map((o,k)=>`<button class="opt" onclick="tryChoice('${st.id}',${k},this)">${'①②③④'[k]} ${o}</button>`).join('')}</div>`;
+    const order=st.opts.map((_,k)=>k);                       // 보기 순서 무작위 섞기
+    for(let a=order.length-1;a>0;a--){const bb=Math.floor(Math.random()*(a+1));[order[a],order[bb]]=[order[bb],order[a]];}
+    b+=`<div class="opts">${order.map((oi,pos)=>`<button class="opt" onclick="tryChoice('${st.id}',${oi},this)">${'①②③④'[pos]} ${st.opts[oi]}</button>`).join('')}</div>`;
   }else{
     b+=`<div class="how">정답을 입력한 뒤 확인을 누르세요. (띄어쓰기는 신경 쓰지 않아도 돼요.)</div>`;
     b+=`<div class="textrow"><input type="text" id="ans" placeholder="정답 입력" autocomplete="off"><button class="btn" onclick="tryText('${st.id}')">확인</button></div>`;
