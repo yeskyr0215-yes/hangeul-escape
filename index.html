@@ -152,7 +152,7 @@
 <!-- 인트로 -->
 <div class="screen" id="intro" style="display:none"><div class="card">
   <h1>훈민정음 대탈출</h1>
-  <p>세 개의 방이 너를 가둔다.<br><b>창제의 방 → 규범의 방 → 우리말 보물의 방.</b><br>
+  <p>네 개의 방이 너를 가둔다.<br><b>창제의 방 → 규범의 방 → 보물의 방 → 한글날의 방.</b><br>
   각 방의 단서로 금고를 열어야 다음으로 나아간다.<br><br>국어의 지혜가 곧 열쇠다.</p>
   <button class="btn" id="startBtn" style="margin-top:14px;font-size:1.1rem;padding:13px 26px">첫 번째 방으로</button>
 </div></div>
@@ -265,7 +265,40 @@ const ROOMS = [
       {id:'l3',build:'lamp',x:0,z:2,color:0xe0b357,name:'등룡',k:'등불의 글귀',
         q:"벽에 마지막 글귀.\n\n“이 수는 훈민정음이 인류의 보물로\n유네스코 세계기록유산에 오른 해로 읽으라.”",
         type:'info',hint:"1990년대, 우리 기록유산이 세계에 오른 해.",reward:null},
-      {id:'door3',build:'door',x:0,z:15.2,color:0x3a2a10,name:'최후의 금고문',k:'최종 관문',type:'safe',lock:'🗝️ 보고 열쇠',reward:null}
+      {id:'door3',build:'door',x:0,z:15.2,color:0x3a2a10,name:'금고문',k:'제3 관문',type:'safe',lock:'🗝️ 보고 열쇠',reward:null}
+    ]},
+  { name:"제4방 · 한글날의 탄생", concept:"가갸날에서 시월 구일까지, 한글날이 세워진 길",
+    code:"1009",  // 한글날 = 10월 9일
+    theme:{floor:0x3f4d6b,wall:0xe7e0cd,accent:0xc0392b,bg:0x090d16,fog:0x090d16},
+    stations:[
+      {id:'a4',build:'desk',x:-10,z:-8,color:0x4a5a7a,name:'기념 서안',k:'가갸날',
+        q:"한글날의 첫 이름이다.\n\n1926년 조선어연구회가 훈민정음 반포를 기려 처음 정한 이 날의 옛 이름은?\n(한글을 '가갸거겨'로 배운 데서 유래)",
+        type:'choice',opts:['가갸날','한글날','정음절','국문일'],answer:0,
+        hint:"'가갸거겨…'로 글자를 익히던 데서 온 이름.",reward:{slot:0,val:'1'}},
+      {id:'b4',build:'scroll',x:0,z:-15.2,color:0xeef0f4,name:'선언 족자',k:'이름의 유래',
+        q:"1928년, '가갸날'은 오늘날의 이름으로 바뀌었다.\n\n주시경 선생 등이 널리 퍼뜨린 어떤 말 덕분에 '○○날'이 되었나?",
+        type:'choice',opts:['한글','국문','언문','정음'],answer:0,
+        hint:"'하나뿐인 큰 글'이라는 뜻으로 주시경이 다듬은 말.",reward:{slot:1,val:'0'}},
+      {id:'c4',build:'chest',x:11,z:-6,color:0x5a4a3a,name:'간송의 궤',k:'해례본 발굴',
+        q:"1940년 경북 안동에서 발굴되어 간송 전형필이 지켜낸,\n한글의 창제 원리와 반포 시기를 밝힌 책은? (국보)",
+        type:'text',accept:['훈민정음해례본','해례본','훈민정음해례','훈민정음 해례본'],
+        hint:"'훈민정음'의 풀이(解例)를 담은 책.",reward:{slot:2,val:'0'}},
+      {id:'d4',build:'drawer',x:9,z:9,color:0x556677,name:'환산표 서랍',k:'시월 구일',
+        q:"《해례본》 정인지 서문 '정통 11년 9월 상한(上旬)'을 근거로,\n음력 9월 10일을 양력으로 환산해 확정한 오늘날의 한글날은?",
+        type:'choice',opts:['10월 9일','10월 28일','10월 29일','11월 4일'],answer:0,
+        hint:"나머지 셋은 예전에 쓰다가 바뀐 날짜다.",reward:{slot:3,val:'9'}},
+      {id:'e4',build:'jar',x:-13,z:2,color:0x4a5a7a,name:'서문 항아리',k:'상한(上旬)',
+        q:"정인지 서문의 '상한(上旬)'은 한 달을 열흘씩 셋으로 나눈 첫머리를 뜻한다.\n\n며칠까지를 이르는가?",
+        type:'choice',opts:['1일~10일','1일~15일','11일~20일','21일~그믐'],answer:0,
+        hint:"상순=초순=첫 열흘.",reward:{item:'📜 정인지 서문'}},
+      {id:'f4',build:'chest',x:13,z:2,color:0x6a3a3a,name:'봉인된 연대기',k:'날짜의 변천',lock:'📜 정인지 서문',
+        q:"서문을 펼치자 마지막 문제가 드러난다.\n\n한글날 날짜가 바뀐 차례로 옳은 것은?",
+        type:'choice',opts:['11월 4일 → 10월 29일 → 10월 28일 → 10월 9일','10월 9일 → 10월 28일 → 11월 4일 → 10월 29일','10월 28일 → 11월 4일 → 10월 9일 → 10월 29일','11월 4일 → 10월 9일 → 10월 28일 → 10월 29일'],answer:0,
+        hint:"가갸날(11/4) → 율리우스력(10/29) → 그레고리력(10/28) → 해례본 근거(10/9).",reward:{item:'🗝️ 반포문 열쇠'}},
+      {id:'l4',build:'lamp',x:0,z:2,color:0xffd98a,name:'기념 등',k:'등불의 글귀',
+        q:"벽에 마지막 글귀가 드러난다.\n\n“이 방의 네 수는 온 겨레가 한글을 기리는 날,\n시월 구일(十月 九日)로 이어 읽으라.”",
+        type:'info',hint:"한글날의 날짜, 10·9.",reward:null},
+      {id:'door4',build:'door',x:0,z:15.2,color:0x2a3550,name:'최후의 금고문',k:'최종 관문',type:'safe',lock:'🗝️ 반포문 열쇠',reward:null}
     ]}
 ];
 const SHIRTS=[0x2f8fd0,0xc0553f,0x5fa86a,0xe0b357,0x9a6ad0,0xe07aa8];
@@ -430,12 +463,18 @@ function decorate(t,idx){
     for(let k=-1;k<=1;k++){const f=box(2.4,4,1.4,0x556677);f.position.set(k*3.2,2,ROOM-1.3);g.add(f);}
     pVase(g,-6,-13,1,0x607080);pVase(g,6,-13,1,0x607080);pPlant(g,13,-13,'bamboo');pPlant(g,-13,-13,'bamboo');
     const bench=box(4,0.5,1.2,0x4b5a68);bench.position.set(8,0.6,-11);g.add(bench);
-  }else{ // 보물의 방(보고)
+  }else if(idx===2){ // 보물의 방(보고)
     pScreen(g,0,-13.4,0,0x8a5a10);
     for(let i=0;i<12;i++){const gold=box(0.7,0.5,0.7,0xe0b357);gold.position.set(-6+(i%6)*0.78,0.25+(i>5?0.5:0),-12.5+(i>5?0.1:0));g.add(gold);}
     pVase(g,12,-11,1.3,0xc79a3a);pVase(g,-11,-12,1,0x9c7a2a);pVase(g,13,11,1.1,0xb98a3a);
     pCandle(g,10,-13);pCandle(g,-10,-13);pPlant(g,-13.5,13,'plum');
     for(let i=0;i<14;i++){const coin=cyl(0.2,0.2,0.05,0xe0b357);coin.rotation.x=Math.PI/2;coin.position.set(5+Math.sin(i)*1.6,0.05,-11+Math.cos(i)*1.3);g.add(coin);}
+  }else{ // 한글날의 방(기념관)
+    pScreen(g,0,-13.4,0,0x2a3a5a);
+    pLattice(g,-ROOM+0.5,-4,Math.PI/2,0xbcd0e8);pLattice(g,-ROOM+0.5,6,Math.PI/2,0xbcd0e8);pLattice(g,ROOM-0.5,1,-Math.PI/2,0xbcd0e8);
+    pVase(g,-6,-13,1,0x4a5a7a);pVase(g,6,-13,1,0xc0392b);
+    pPlant(g,13,13,'bamboo');pPlant(g,-13.5,13,'plum');
+    pCandle(g,-9,-13);pCandle(g,9,-13);
   }
 }
 
@@ -673,7 +712,7 @@ function makeCode(){const d=new Date(),p=n=>String(n).padStart(2,'0');
   const rnd=Array.from({length:2},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
   return `HG-${String(d.getFullYear()).slice(2)}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}-${rnd}`;}
 function win(){const code=makeCode();
-  $('#wintext').innerHTML=`세 개의 방을 모두 빠져나왔다!<br>1443 창제 · 1446 반포 · 1997 세계유산 등재.<br><b>${player.name}</b>, 너는 훈민정음의 길을 완주했다.`;
+  $('#wintext').innerHTML=`네 개의 방을 모두 빠져나왔다!<br>1443 창제 · 1446 반포 · 1997 세계유산 등재 · 10월 9일 한글날.<br><b>${player.name}</b>, 너는 훈민정음의 길을 완주했다.`;
   $('#wincode').textContent=code;$('#wintime').textContent=new Date().toLocaleString('ko-KR')+' 완주';
   if(CONFIG.FORM_URL&&CONFIG.ENTRY_CODE){const url=`${CONFIG.FORM_URL}?usp=pp_url&${CONFIG.ENTRY_CODE}=${encodeURIComponent(code)}`;
     $('#winsubmit').innerHTML=`<a class="btn" href="${url}" target="_blank" rel="noopener">🎁 선물 신청하기 (제출)</a>`;}
