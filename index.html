@@ -88,6 +88,10 @@
   #fade .rn{font-family:var(--font-calligraphy);font-size:2.4rem}
   .modal .k{font-family:var(--font-calligraphy);font-size:1.25rem;letter-spacing:.03em;color:var(--gold)}
   .modal .q{font-family:var(--font-traditional);font-weight:700;color:var(--ink);text-shadow:0 1px 2px #0006}
+  .modal .qguide{font-family:var(--font-serif);font-size:.82rem;color:var(--ink-dim);background:#00000033;
+    border-left:2px solid var(--gold-dim);padding:7px 10px;border-radius:0 8px 8px 0;margin:2px 0 10px;line-height:1.5}
+  .modal .qguide b{color:var(--gold);font-weight:700}
+  .modal .how{font-size:.76rem;color:var(--ink-dim);margin:9px 0 5px}
   #hud .title b{font-family:var(--font-traditional)}
   #intro p b{font-family:var(--font-traditional)}
 
@@ -137,8 +141,7 @@
 
 <!-- 캐릭터 세팅 -->
 <div class="screen" id="setup"><div class="card">
-  <h1>탐험가 만들기</h1>
-  <p>이름을 정하고 옷 색을 골라라.<br>이름은 머리 위에 따라다닌다.</p>
+  <h1>밀실의 문 앞에서</h1>
   <input class="fld" id="nameIn" maxlength="8" placeholder="이름 (최대 8자)">
   <div class="swatches" id="swatches"></div>
   <input class="fld" id="sessionIn" maxlength="16" placeholder="게임 코드 (같은 반은 같게, 선택)">
@@ -185,10 +188,18 @@ const ROOMS = [
       {id:'c1',build:'chest',x:12,z:7,color:0x7a5230,name:'서궤',k:'창제의 주인',
         q:"이 모든 글자를 만든 조선의 임금은 누구인가? (이름)",
         type:'text',accept:['세종','세종대왕'],hint:"조선 제4대 왕.",reward:{slot:3,val:'3'}},
+      {id:'x1a',build:'jar',x:13,z:-2,color:0xb0763a,name:'놋 항아리',k:'제자 원리',
+        q:"자음 기본자 다섯은 발음 기관을 본떠 만들었다.\n\n어금닛소리(아음)의 기본자로, 혀뿌리가 목구멍을 막는 모양을 본뜬 글자는?",
+        type:'choice',opts:['ㄱ','ㄴ','ㅁ','ㅅ'],answer:0,
+        hint:"기본자 — ㄱ(어금니) ㄴ(혀) ㅁ(입) ㅅ(이) ㆁ(목구멍).",reward:{item:'📜 낡은 서첩'}},
+      {id:'x1b',build:'chest',x:-13,z:-2,color:0x7a5230,name:'봉인된 궤',k:'창제의 벗',lock:'📜 낡은 서첩',
+        q:"서첩을 펼치자 문제가 드러난다.\n\n세종을 도와 훈민정음을 짓고 해설한, 궁중의 학문 연구 기관은?",
+        type:'choice',opts:['집현전','규장각','성균관','홍문관'],answer:0,
+        hint:"'어진 인재를 모은다'는 뜻의 세종 때 학문 기관.",reward:{item:'🗝️ 서고 열쇠'}},
       {id:'l1',build:'lamp',x:-11,z:5,color:0xe0b357,name:'등잔',k:'등불의 글귀',
         q:"불을 붙이자 벽에 글귀가 드러난다.\n\n“금고의 네 숫자를 천·백·십·일로 잇고,\n세종이 이 글자를 처음 만든(창제) 해로 읽으라.”",
         type:'info',hint:"훈민정음이 창제된 해.",reward:null},
-      {id:'door1',build:'door',x:0,z:15.2,color:0x53381f,name:'금고문',k:'제1 관문',type:'safe',reward:null}
+      {id:'door1',build:'door',x:0,z:15.2,color:0x53381f,name:'금고문',k:'제1 관문',type:'safe',lock:'🗝️ 서고 열쇠',reward:null}
     ]},
   { name:"제2방 · 규범의 방", concept:"바른 말을 가려내는 차가운 검사실",
     code:"1446",  // 훈민정음 반포(1446)
@@ -210,10 +221,18 @@ const ROOMS = [
         q:"빈칸에 알맞은 것은?\n\n“그러면 안 ___ .”",type:'choice',
         opts:['되','돼','됀','되어'],answer:1,
         hint:"'돼'는 '되어'의 준말. '안 되어'가 되므로 '안 돼'.",reward:{slot:3,val:'6'}},
+      {id:'x2a',build:'jar',x:-13,z:2,color:0x60707e,name:'교정 항아리',k:'맞춤법',
+        q:"밑줄 친 말이 바르게 적힌 것은?",type:'choice',
+        opts:['오랫만에','오랜만에','오랟만에','오랫만해'],answer:1,
+        hint:"'오래간만'의 준말은 '오랜만'.",reward:{item:'🔖 교정 도장'}},
+      {id:'x2b',build:'chest',x:12,z:3,color:0x4b5a68,name:'봉인 서류함',k:'띄어쓰기',lock:'🔖 교정 도장',
+        q:"도장을 찍자 다음 문제가 나타난다.\n\n띄어쓰기가 바른 것은?",type:'choice',
+        opts:['할수있다','할 수 있다','할수 있다','할 수있다'],answer:1,
+        hint:"의존 명사 '수'는 앞말과 띄어 쓴다.",reward:{item:'🗝️ 검사실 열쇠'}},
       {id:'l2',build:'lamp',x:0,z:2,color:0x8fd0ff,name:'등불',k:'등불의 글귀',
         q:"벽에 글귀가 드러난다.\n\n“이 방의 수는 세종이 백성에게 이 글자를\n널리 펴낸(반포) 해로 읽으라.”",
         type:'info',hint:"훈민정음이 반포된 해.",reward:null},
-      {id:'door2',build:'door',x:0,z:15.2,color:0x2f3d49,name:'금고문',k:'제2 관문',type:'safe',reward:null}
+      {id:'door2',build:'door',x:0,z:15.2,color:0x2f3d49,name:'금고문',k:'제2 관문',type:'safe',lock:'🗝️ 검사실 열쇠',reward:null}
     ]},
   { name:"제3방 · 우리말 보물의 방", concept:"옛말과 순우리말이 잠든 황금 보고",
     code:"1997",  // 훈민정음 유네스코 세계기록유산 등재(1997)
@@ -239,10 +258,14 @@ const ROOMS = [
         q:"보물궤가 열렸다.\n\n중세국어에서 '어리다'의 뜻은?",type:'choice',
         opts:['어리석다','나이가 적다','예쁘다','화나다'],answer:0,
         hint:"“어린 백성”은 '어리석은 백성'. 뜻이 옮겨간(어의전성) 낱말.",reward:{slot:3,val:'7'}},
+      {id:'x3',build:'jar',x:12,z:3,color:0xb98a3a,name:'옥합',k:'순우리말',
+        q:"순우리말 방위 바람이다.\n\n서쪽에서 부는 바람을 이르는 순우리말은?",type:'choice',
+        opts:['샛바람','하늬바람','마파람','된바람'],answer:1,
+        hint:"샛바람=동, 하늬바람=서, 마파람=남, 된바람=북.",reward:{item:'🗝️ 보고 열쇠'}},
       {id:'l3',build:'lamp',x:0,z:2,color:0xe0b357,name:'등룡',k:'등불의 글귀',
         q:"벽에 마지막 글귀.\n\n“이 수는 훈민정음이 인류의 보물로\n유네스코 세계기록유산에 오른 해로 읽으라.”",
         type:'info',hint:"1990년대, 우리 기록유산이 세계에 오른 해.",reward:null},
-      {id:'door3',build:'door',x:0,z:15.2,color:0x3a2a10,name:'최후의 금고문',k:'최종 관문',type:'safe',reward:null}
+      {id:'door3',build:'door',x:0,z:15.2,color:0x3a2a10,name:'최후의 금고문',k:'최종 관문',type:'safe',lock:'🗝️ 보고 열쇠',reward:null}
     ]}
 ];
 const SHIRTS=[0x2f8fd0,0xc0553f,0x5fa86a,0xe0b357,0x9a6ad0,0xe07aa8];
@@ -332,7 +355,7 @@ function buildAvatar(shirt,name,skin){
   legL.add(p(0.5,1.4,0.6,0x2f2f3a,0,-0.7,0)); legR.add(p(0.5,1.4,0.6,0x2f2f3a,0,-0.7,0));
   armL.add(p(0.4,1.3,0.5,skin,0,-0.65,0)); armR.add(p(0.4,1.3,0.5,skin,0,-0.65,0));
   g.add(legL,legR,armL,armR);
-  const tag=textSprite(name); tag.scale.set(2.3,0.86,1); tag.position.set(0,4.95,0); g.add(tag);
+  const tag=textSprite(name); tag.scale.set(1.15,0.43,1); tag.position.set(0,4.75,0); g.add(tag);
   g.userData={legL,legR,armL,armR,tag};
   return g;
 }
@@ -437,6 +460,11 @@ function buildRoom(i){
     const g=furniture(st.build,st.color);
     let z=st.z; if(st.build==='scroll')z=-ROOM+0.9; if(st.build==='door')z=ROOM-0.4;
     g.position.set(st.x,0,z); roomGroup.add(g); st.group=g; st._z=z;
+    if(st.build==='door'){                                  // 문 위 '다음 방으로' 표지
+      const lbl=(i>=ROOMS.length-1)?'최종 탈출':'다음 방으로';
+      const sign=textSprite(lbl,'#ffe6a8'); sign.scale.set(5.4,2,1); sign.position.set(st.x,7.4,z-0.2);
+      roomGroup.add(sign);
+    }
   });
   // 공중의 빛가루(분위기 소품)
   { const N=110, geo=new THREE.BufferGeometry(), pos=new Float32Array(N*3);
@@ -588,9 +616,16 @@ function openInfo(st){$('#modal').innerHTML=`<div class="k">${st.k}</div><div cl
 window.finishInfo=id=>{markDone(id);closeOverlay();};
 function openPuzzle(st){
   let b=`<div class="lock-wrap"><div class="lock-container" id="lock"><div class="lock-shackle"></div><div class="lock-body"><div class="keyhole"></div></div></div></div>`;
-  b+=`<div class="k">${st.k}</div><div class="q">${st.q}</div>`;
-  if(st.type==='choice')b+=`<div class="opts">${st.opts.map((o,k)=>`<button class="opt" onclick="tryChoice('${st.id}',${k},this)">${'①②③④'[k]} ${o}</button>`).join('')}</div>`;
-  else b+=`<div class="textrow"><input type="text" id="ans" placeholder="정답 입력" autocomplete="off"><button class="btn" onclick="tryText('${st.id}')">확인</button></div>`;
+  b+=`<div class="k">${st.k}</div>`;
+  b+=`<div class="qguide">🔎 <b>${st.name}</b> 앞에 자물쇠가 걸려 있다. 문제를 풀면 자물쇠가 열리고 단서를 얻는다.</div>`;
+  b+=`<div class="q">${st.q}</div>`;
+  if(st.type==='choice'){
+    b+=`<div class="how">아래 보기에서 알맞은 답 하나를 누르세요. 틀려도 다시 시도할 수 있어요.</div>`;
+    b+=`<div class="opts">${st.opts.map((o,k)=>`<button class="opt" onclick="tryChoice('${st.id}',${k},this)">${'①②③④'[k]} ${o}</button>`).join('')}</div>`;
+  }else{
+    b+=`<div class="how">정답을 입력한 뒤 확인을 누르세요. (띄어쓰기는 신경 쓰지 않아도 돼요.)</div>`;
+    b+=`<div class="textrow"><input type="text" id="ans" placeholder="정답 입력" autocomplete="off"><button class="btn" onclick="tryText('${st.id}')">확인</button></div>`;
+  }
   b+=`<div class="msg" id="pmsg"></div><div class="row-btns">
     <button class="hlink" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">힌트 보기</button>
     <div class="hintline">${st.hint||''}</div>
