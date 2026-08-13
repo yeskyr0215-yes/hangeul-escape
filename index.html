@@ -25,11 +25,11 @@
     display:grid;place-items:center;font-size:1.2rem;font-weight:800;color:var(--gold);background:#0007}
   .slot small{position:absolute;bottom:-13px;font-size:.5rem;color:var(--ink-dim)}
   #items{font-size:1.3rem;min-width:30px;text-align:right}
-  #stick{position:fixed;left:22px;bottom:26px;width:130px;height:130px;z-index:20;border-radius:50%;
+  #stick{position:fixed;right:22px;bottom:26px;width:130px;height:130px;z-index:20;border-radius:50%;
     background:#ffffff14;border:2px solid #ffffff33;touch-action:none}
   #knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
     background:var(--gold);box-shadow:0 4px 12px #0008;opacity:.9}
-  #act{position:fixed;right:22px;bottom:44px;z-index:20;padding:18px 24px;border:none;border-radius:18px;
+  #act{position:fixed;left:22px;bottom:44px;z-index:20;padding:18px 24px;border:none;border-radius:18px;
     background:var(--gold);color:#1a120b;font-family:inherit;font-weight:800;font-size:1.05rem;box-shadow:0 6px 18px #000a;display:none}
   #hintbar{position:fixed;left:0;right:0;bottom:4px;z-index:15;text-align:center;color:#ffffff88;font-size:.76rem;pointer-events:none}
 
@@ -252,7 +252,7 @@ const $=s=>document.querySelector(s);
 /* 터치 기기 여부: 폰·패드면 키보드 단축키 안내를 숨긴다 */
 const IS_TOUCH = (matchMedia&&matchMedia('(pointer:coarse)').matches) || ('ontouchstart' in window) || navigator.maxTouchPoints>0;
 $('#hintbar').textContent = IS_TOUCH
-  ? '왼쪽 조이스틱으로 이동 · 빛나는 가구 근처에서 아래 조사 버튼을 탭'
+  ? '오른쪽 조이스틱으로 이동 · 빛나는 가구 근처에서 왼쪽 조사 버튼을 탭'
   : '조이스틱으로 이동 · 빛나는 가구를 조사 (PC: WASD / E)';
 const player={name:'탐험가',shirt:SHIRTS[0],session:''};
 const progress={room:0};
@@ -457,7 +457,10 @@ buildRoom(0);
 /* 입력 */
 const input={x:0,y:0};
 (function joystick(){const base=$('#stick'),knob=$('#knob');let id=null,cx,cy;const Rr=48;
-  const set=(dx,dy)=>{const l=Math.hypot(dx,dy);if(l>Rr){dx=dx/l*Rr;dy=dy/l*Rr;}knob.style.transform=`translate(${dx}px,${dy}px)`;input.x=dx/Rr;input.y=dy/Rr;};
+  const set=(dx,dy)=>{let l=Math.hypot(dx,dy);if(l>Rr){dx=dx/l*Rr;dy=dy/l*Rr;l=Rr;}
+    knob.style.transform=`translate(${dx}px,${dy}px)`;               // 노브는 손가락 따라 그대로
+    const DEAD=0.16; let m=Math.max(0,(l/Rr-DEAD)/(1-DEAD)); m=m*m; // 데드존 + 제곱 곡선(둔감화)
+    const a=Math.atan2(dy,dx); input.x=Math.cos(a)*m; input.y=Math.sin(a)*m;};
   const reset=()=>{knob.style.transform='';input.x=input.y=0;id=null;};
   base.addEventListener('pointerdown',e=>{id=e.pointerId;const r=base.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;set(e.clientX-cx,e.clientY-cy);base.setPointerCapture(id);});
   base.addEventListener('pointermove',e=>{if(e.pointerId===id)set(e.clientX-cx,e.clientY-cy);});
